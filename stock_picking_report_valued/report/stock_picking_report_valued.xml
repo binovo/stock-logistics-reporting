@@ -13,7 +13,7 @@
                     <strong>Discount</strong>
                 </th>
                 <th class="text-right"><strong>Subtotal</strong></th>
-                <th class="text-right"><strong>Taxes</strong></th>
+                <th class="text-right th-taxes"><strong>Taxes</strong></th>
             </t>
         </xpath>
         <xpath expr="//span[@t-field='move_line.qty_done']/.." position="after">
