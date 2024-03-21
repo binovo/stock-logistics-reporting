@@ -57,21 +57,21 @@ class StockPicking(models.Model):
                 'amount_total': amount_untaxed + amount_tax,
             })
 
-    @api.multi
     def get_taxes_values(self):
+        self.ensure_one()
         tax_grouped = {}
         for line in self.move_line_ids:
-            for tax in line.sale_line.tax_id:
-                tax_id = tax.id
-                if tax_id not in tax_grouped:
-                    tax_grouped[tax_id] = {
-                        'base': line.sale_price_subtotal,
-                        'tax': tax,
-                    }
-                else:
-                    tax_grouped[tax_id]['base'] += line.sale_price_subtotal
-        for tax_id, tax_group in tax_grouped.items():
-            tax_grouped[tax_id]['amount'] = tax_group['tax'].compute_all(
-                tax_group['base'], self.sale_id.currency_id
-            )['taxes'][0]['amount']
+            tax_key = '-'.join(sorted(map(str, line.sale_line.tax_id.ids)))
+            tax_amount = sum(line.mapped("sale_line").mapped("price_tax"))
+            if tax_key not in tax_grouped:
+                tax_grouped[tax_key] = {
+                    "base": line.sale_price_total,
+                    "tax": line.sale_line.tax_id.mapped('amount'),
+                    "tax_name": ', '.join(line.sale_line.tax_id.mapped('name')),
+                    "amount": tax_amount,
+                }
+            else:
+                tax_grouped[tax_key]["base"] += line.sale_price_total
+                tax_grouped[tax_key]["amount"] += tax_amount
+
         return tax_grouped

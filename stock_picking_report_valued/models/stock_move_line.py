@@ -58,21 +58,13 @@ class StockMoveLine(models.Model):
         access to sales orders (stricter warehouse users, inter-company
         records...).
         """
-        prec = self.env['decimal.precision'].precision_get('Product Price')
         for line in self:
             # In v12 the support for compute_sudo on non stored fields is
             # limited (officially unsupported) so we have to mainaint some
             # some sudo() calls. This is not necessary from v13
             # https://github.com/odoo/odoo/blob/12.0/odoo/fields.py#L179
             sale_line = line.sale_line.sudo()
-            price_unit = (
-                float_round(
-                    sale_line.price_subtotal / sale_line.product_uom_qty,
-                    precision_digits=prec,
-                )
-                if sale_line.product_uom_qty
-                else sale_line.price_reduce
-            )
+            price_unit = sale_line.price_unit * (1 - (sale_line.discount or 0.0) / 100.0)
             taxes = line.sale_tax_id.compute_all(
                 price_unit=price_unit,
                 currency=line.currency_id,
