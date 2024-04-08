@@ -13,3 +13,6 @@ class ResPartner(models.Model):
         default=True,
         help='You can select which partners have valued pickings',
     )
+
+    def _commercial_fields(self):
+        return super()._commercial_fields() + ["valued_picking"]
