@@ -9,6 +9,15 @@ from openupgradelib import openupgrade
 def migrate(env, version):
     if not version:
         return
+
     partners = env["res.partner"].search([("parent_id", "=", False)])
     for partner in partners:
-        partner.write({"valued_picking": partner.valued_picking})
+        child_ids = env["res.partner"].search([('parent_id', 'child_of', partner.id)]).ids
+        if len(child_ids) > 1:
+            openupgrade.logged_query(
+                env.cr,
+                """
+                UPDATE res_partner SET valued_picking = %s WHERE id in %s
+                """,
+                (partner.valued_picking, tuple(child_ids)),
+            )
