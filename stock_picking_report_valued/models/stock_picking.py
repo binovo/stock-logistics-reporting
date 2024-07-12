@@ -62,7 +62,10 @@ class StockPicking(models.Model):
         tax_grouped = {}
         for line in self.move_line_ids:
             tax_key = '-'.join(sorted(map(str, line.sale_line.tax_id.ids)))
-            tax_amount = sum(line.mapped("sale_line").mapped("price_tax"))
+            tax_amount = 0
+            tax_list = line.sale_line.tax_id.mapped('amount')
+            for tax in tax_list:
+                tax_amount += line.sale_price_subtotal * (tax / 100)
             if tax_key not in tax_grouped:
                 tax_grouped[tax_key] = {
                     "base": line.sale_price_total,
